@@ -435,6 +435,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
           <div class="board-color-dot" id="board-dot"></div>
           <div class="main-title" id="board-title">—</div>
           <button class="btn sm" onclick="abrirModal('modal-members')">👥 Membros</button>
+          <button class="btn sm" id="rename-board-btn">✏️ Renomear</button>
           <button class="btn sm danger" id="del-board-btn">🗑️ Excluir</button>
           <button class="btn sm p" id="new-col-btn">+ Lista</button>
         </div>
@@ -1044,10 +1045,11 @@ function loadMembers(){
 }
 function renderMembers(){
   var el=document.getElementById('members-list');if(!el)return;
-  el.innerHTML=MEMBERS.map(function(m){return '<div class="member-item">'+
+      el.innerHTML=MEMBERS.map(function(m){return '<div class="member-item">'+
     '<div class="member-avatar">'+ini(m.email)+'</div>'+
     '<div style="flex:1"><div class="member-name">'+esc(m.email)+'</div></div>'+
     '<span class="member-role '+(m.role||'member')+'">'+(m.role||'member')+'</span>'+
+    (ME&&m.email!==ME.email?'<button onclick="excluirMembro(\''+m.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:3px 6px;border-radius:4px;margin-left:6px;transition:all .2s" onmouseover="this.style.background=\'var(--red-bg)\';this.style.color=\'var(--red)\'" onmouseout="this.style.background=\'none\';this.style.color=\'var(--text3)\'">✕</button>':'')+
     '</div>';}).join('');
   // Atualiza selects de assignee
   var sels=document.querySelectorAll('#modal-assignee');
@@ -1073,10 +1075,27 @@ function convidarMembro(){
   });
 }
 
-// EVENTS
+function excluirMembro(id){
+  if(!confirm('Remover este membro?'))return;
+  db.collection('members').doc(id).delete().then(function(){toast('Membro removido.');});
+}
+
+function renomearBoard(id,nomeAtual){
+  var novo=prompt('Novo nome do quadro:',nomeAtual);
+  if(!novo||!novo.trim()||novo.trim()===nomeAtual)return;
+  db.collection('boards').doc(id).update({name:novo.trim()}).then(function(){
+    document.getElementById('board-title').textContent=novo.trim();
+    toast('✅ Quadro renomeado!');
+  });
+}
 document.getElementById('new-board-btn').onclick=abrirModalBoard;
 document.getElementById('empty-new-btn').onclick=abrirModalBoard;
 document.getElementById('del-board-btn').onclick=function(){if(CURRENT_BOARD)deletarBoard(CURRENT_BOARD);};
+document.getElementById('rename-board-btn').onclick=function(){
+  if(!CURRENT_BOARD)return;
+  var board=BOARDS.find(function(b){return b.id===CURRENT_BOARD;});
+  if(board)renomearBoard(CURRENT_BOARD,board.name);
+};
 document.getElementById('new-col-btn').onclick=abrirModalColuna;
 window.onclick=function(e){
   if(e.target.classList.contains('gmodal-bg'))e.target.classList.remove('open');
