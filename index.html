@@ -252,6 +252,12 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20p
     <div class="lf"><label>Senha</label><input type="password" id="lsenha" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
     <button class="login-btn" id="lbtn" onclick="login()">Entrar</button>
     <div class="login-error" id="lerr"></div>
+    <div style="text-align:center;margin-top:14px">
+      <button onclick="primeiroAcesso()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);font-family:inherit;text-decoration:underline;transition:color .2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">
+        Primeiro acesso ou esqueceu a senha? Clique aqui
+      </button>
+    </div>
+    <div id="reset-msg" style="display:none;margin-top:10px;background:var(--green-bg);border:1px solid var(--green);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--green);text-align:center"></div>
   </div>
 </div>
 
@@ -496,6 +502,27 @@ auth.onAuthStateChanged(function(u){
     ME=null;
   }
 });
+function primeiroAcesso(){
+  var email=document.getElementById('lemail').value.trim();
+  var msg=document.getElementById('reset-msg');
+  var err=document.getElementById('lerr');
+  err.style.display='none';
+  if(!email){
+    err.textContent='Digite seu e-mail acima antes de continuar.';
+    err.style.display='block';
+    document.getElementById('lemail').focus();
+    return;
+  }
+  auth.sendPasswordResetEmail(email).then(function(){
+    msg.textContent='✅ E-mail enviado para '+email+'! Verifique sua caixa de entrada e siga as instruções para definir sua senha.';
+    msg.style.display='block';
+  }).catch(function(e){
+    var m={'auth/user-not-found':'E-mail não encontrado. Peça ao administrador para te convidar primeiro.','auth/invalid-email':'E-mail inválido.'};
+    err.textContent=m[e.code]||'Erro ao enviar e-mail. Tente novamente.';
+    err.style.display='block';
+  });
+}
+
 function login(){
   var e=document.getElementById('lemail').value.trim(),s=document.getElementById('lsenha').value;
   var btn=document.getElementById('lbtn'),err=document.getElementById('lerr');
